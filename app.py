@@ -1,113 +1,105 @@
 """
-Hub Central de Automatizações
-Sistema unificado com múltiplas ferramentas
+Hub Central de Automatizacoes
+Sistema unificado com multiplas ferramentas
 """
 
 import streamlit as st
 
-# Configuração da página (ÚNICA no projeto)
 st.set_page_config(
-    page_title="Hub de Automatizações",
+    page_title="Hub de Automatizacoes",
     page_icon="🛠️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# CSS customizado
+# CSS para estilizar
 st.markdown("""
     <style>
-    .main {
-        padding: 2rem;
+    .stButton > button {
+        width: 100%;
+        height: 60px;
+        font-size: 16px;
+        font-weight: 500;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        background-color: white;
+        color: #333;
+        margin-bottom: 10px;
+        transition: all 0.3s;
     }
-    .main-header {
-        font-size: 2.5rem;
+    .stButton > button:hover {
+        background-color: #f5f5f5;
+        border-color: #4F46E5;
+        color: #4F46E5;
+    }
+    .titulo-principal {
+        font-size: 3.5rem;
         font-weight: bold;
         text-align: center;
-        margin-bottom: 2rem;
-        color: #4F46E5;
+        color: #1f2937;
+        margin-top: 150px;
+        margin-bottom: 30px;
+    }
+    .subtitulo {
+        font-size: 1.8rem;
+        text-align: center;
+        color: #6b7280;
+        margin-bottom: 80px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Importar páginas
-from pages import etiquetas
-from pages import unir_abas
+# Importar paginas
+from app_pages import etiquetas
+from app_pages import unir_abas
 
 def main():
-    """Função principal do hub"""
+    """Funcao principal do hub"""
     
-    # Sidebar - Menu de navegação
+    # Inicializar session state
+    if 'pagina_atual' not in st.session_state:
+        st.session_state.pagina_atual = "home"
+    
+    # SIDEBAR - Menu de navegacao
     with st.sidebar:
-        st.markdown("# 🛠️ Automatizações")
+        st.markdown("# Menu")
         st.markdown("---")
         
-        pagina_selecionada = st.radio(
-            "Escolha a ferramenta:",
-            ["🏠 Início", "🏷️ Criação de Etiquetas", "📊 Unir Abas (Olimpíadas)"],
-            label_visibility="collapsed"
-        )
+        # Botao Criacao de Etiquetas
+        if st.button("Criacao de Etiquetas", use_container_width=True):
+            st.session_state.pagina_atual = "etiquetas"
+            st.rerun()
+        
+        # Botao Unir Abas
+        if st.button("Unir Abas", use_container_width=True):
+            st.session_state.pagina_atual = "unir_abas"
+            st.rerun()
         
         st.markdown("---")
-        st.info("💡 Selecione uma ferramenta acima")
+        st.caption("💡 Clique em uma opcao acima")
     
-    # Conteúdo principal
-    if pagina_selecionada == "🏠 Início":
+    # RENDERIZAR CONTEUDO
+    if st.session_state.pagina_atual == "home":
         render_home()
-    elif pagina_selecionada == "🏷️ Criação de Etiquetas":
+    elif st.session_state.pagina_atual == "etiquetas":
         etiquetas.run()
-    elif pagina_selecionada == "📊 Unir Abas (Olimpíadas)":
+    elif st.session_state.pagina_atual == "unir_abas":
         unir_abas.run()
 
 def render_home():
-    """Renderiza a página inicial"""
+    """Tela inicial - antes de escolher qualquer opcao"""
     
-    st.markdown('<div class="main-header">🛠️ Hub de Automatizações Educacionais</div>', unsafe_allow_html=True)
+    # Titulo principal centralizado
+    st.markdown(
+        '<div class="titulo-principal">Inteleceleri - Equipe de Projetos</div>', 
+        unsafe_allow_html=True
+    )
     
-    st.markdown("## Bem-vindo! 👋")
-    st.markdown("### Use o menu lateral para escolher uma ferramenta")
-    
-    st.markdown("---")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        ### 🏷️ Criação de Etiquetas
-        
-        **Funcionalidades:**
-        - ✅ Etiquetas para provas **adaptadas**
-        - ✅ Etiquetas para provas **não adaptadas**
-        - ✅ Detecção automática de colunas
-        - ✅ Limpeza inteligente de nomes
-        - ✅ Exportação em PDF
-        
-        **Formatos aceitos:** CSV, Excel (XLSX)
-        """)
-    
-    with col2:
-        st.markdown("""
-        ### 📊 Unir Abas (Olimpíadas)
-        
-        **Funcionalidades:**
-        - ✅ Consolida múltiplas abas
-        - ✅ Separa Olimpíadas e Paralimpíadas
-        - ✅ Formato pivotado (Olimpíadas)
-        - ✅ Formato normalizado (Paralimpíadas)
-        - ✅ Exportação em Excel ou CSV
-        
-        **Formatos aceitos:** Excel (XLSX, XLS)
-        """)
-    
-    st.markdown("---")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric("🛠️ Ferramentas", "2")
-    with col2:
-        st.metric("📄 Formatos", "5+")
-    with col3:
-        st.metric("⚡ Automação", "100%")
+    # Subtitulo centralizado
+    st.markdown(
+        '<div class="subtitulo">Escolha uma opção ao lado e otimize seu tempo</div>', 
+        unsafe_allow_html=True
+    )
 
 if __name__ == "__main__":
     main()

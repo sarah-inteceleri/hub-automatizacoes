@@ -17,21 +17,23 @@ def run():
     separando automaticamente os dados em **Olimpíadas** e **Paralimpíadas**.
     """)
     
-    st.markdown("---")
+    # Informações sobre o critério (no conteúdo principal)
+    col1, col2 = st.columns(2)
     
-    # Sidebar com informações específicas
-    with st.sidebar:
-        st.markdown("### 🎯 Critério de Classificação")
-        st.success(
-            "**Olimpíadas:** Alunos com texto exato 'Não possui deficiência/transtorno'\n\n"
-            "**Paralimpíadas:** Qualquer outro valor ou vazio"
+    with col1:
+        st.info(
+            "**🎯 Olimpíadas**\n\n"
+            "Alunos com texto exato:\n"
+            "'Não possui deficiência/transtorno'"
         )
-        
-        st.markdown("### 📋 Formatos de Saída")
-        st.markdown(
-            "🥇 **Olimpíadas:** Formato pivotado (anos nas colunas)\n\n"
-            "🥈 **Paralimpíadas:** Formato normalizado (long format)"
+    
+    with col2:
+        st.info(
+            "**🥈 Paralimpíadas**\n\n"
+            "Qualquer outro valor ou vazio"
         )
+    
+    st.markdown("---")
     
     # Seção de upload
     render_upload_section()
@@ -42,40 +44,24 @@ def run():
         
         try:
             with st.spinner("🔄 Processando planilha..."):
-                # Processar arquivo
                 processor = OlimpiadasProcessor()
                 file_handler = FileHandler()
-                
-                # Ler arquivo Excel
                 workbook_data = file_handler.read_excel(uploaded_file)
+                olimpiadas_df, paralimpiadas_df, anos_ordenados = processor.process_workbook(workbook_data)
                 
-                # Processar dados
-                olimpiadas_df, paralimpiadas_df, anos_ordenados = processor.process_workbook(
-                    workbook_data
-                )
-                
-                # Salvar no session state
                 st.session_state['olimpiadas'] = olimpiadas_df
                 st.session_state['paralimpiadas'] = paralimpiadas_df
                 st.session_state['anos_ordenados'] = anos_ordenados
                 st.session_state['processed'] = True
                 
             st.success("✅ Planilha processada com sucesso!")
-            
-            # Renderizar resultados
-            render_results_section(
-                olimpiadas_df,
-                paralimpiadas_df,
-                anos_ordenados,
-                file_handler
-            )
+            render_results_section(olimpiadas_df, paralimpiadas_df, anos_ordenados, file_handler)
             
         except Exception as e:
             st.error(f"❌ Erro ao processar arquivo: {str(e)}")
             with st.expander("🔍 Ver detalhes do erro"):
                 st.exception(e)
     else:
-        # Mostrar instruções quando não há arquivo
         render_instructions()
 
 
@@ -86,7 +72,7 @@ def render_upload_section():
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        uploaded_file = st.file_uploader(
+        st.file_uploader(
             "Escolha o arquivo Excel",
             type=['xlsx', 'xls'],
             help="Selecione a planilha com múltiplas abas (uma por escola)",
@@ -94,23 +80,15 @@ def render_upload_section():
         )
 
 
-def render_results_section(
-    olimpiadas_df: pd.DataFrame,
-    paralimpiadas_df: pd.DataFrame,
-    anos_ordenados: list,
-    file_handler: FileHandler
-):
+def render_results_section(olimpiadas_df, paralimpiadas_df, anos_ordenados, file_handler):
     """Renderiza a seção de resultados"""
     st.markdown("---")
     st.markdown("## 📊 Resultados")
     
-    # Métricas principais
+    # Métricas
     col1, col2, col3 = st.columns(3)
     
-    total_olimpiadas = 0
-    if not olimpiadas_df.empty and len(olimpiadas_df.columns) > 1:
-        total_olimpiadas = olimpiadas_df.iloc[:, 1:].sum().sum()
-    
+    total_olimpiadas = olimpiadas_df.iloc[:, 1:].sum().sum() if not olimpiadas_df.empty and len(olimpiadas_df.columns) > 1 else 0
     total_paralimpiadas = paralimpiadas_df['Quantidade'].sum() if not paralimpiadas_df.empty else 0
     total_escolas = len(olimpiadas_df) if not olimpiadas_df.empty else 0
     
@@ -123,21 +101,13 @@ def render_results_section(
     
     st.markdown("---")
     
-    # Seção Olimpíadas
+    # Olimpíadas
     st.markdown("### 🥇 Olimpíadas - Formato Pivotado")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.info(f"📊 **{len(olimpiadas_df)}** escolas processadas")
-    with col2:
-        st.info(f"📅 **{len(anos_ordenados)}** anos escolares encontrados")
     
     with st.expander("👁️ Visualizar dados", expanded=True):
         st.dataframe(olimpiadas_df, use_container_width=True, height=400)
     
-    # Botões de download Olimpíadas
     col1, col2 = st.columns(2)
-    
     with col1:
         excel_data, mime, ext = file_handler.get_download_button_data(olimpiadas_df, 'excel')
         st.download_button(
@@ -147,7 +117,6 @@ def render_results_section(
             mime=mime,
             use_container_width=True
         )
-    
     with col2:
         csv_data, mime, ext = file_handler.get_download_button_data(olimpiadas_df, 'csv')
         st.download_button(
@@ -160,23 +129,13 @@ def render_results_section(
     
     st.markdown("---")
     
-    # Seção Paralimpíadas
+    # Paralimpíadas
     st.markdown("### 🥈 Paralimpíadas - Formato Normalizado")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.info(f"📊 **{len(paralimpiadas_df)}** registros processados")
-    with col2:
-        if not paralimpiadas_df.empty:
-            escolas_para = paralimpiadas_df['Escola'].nunique()
-            st.info(f"🏫 **{escolas_para}** escolas com participantes")
     
     with st.expander("👁️ Visualizar dados", expanded=True):
         st.dataframe(paralimpiadas_df, use_container_width=True, height=400)
     
-    # Botões de download Paralimpíadas
     col1, col2 = st.columns(2)
-    
     with col1:
         excel_data, mime, ext = file_handler.get_download_button_data(paralimpiadas_df, 'excel')
         st.download_button(
@@ -186,7 +145,6 @@ def render_results_section(
             mime=mime,
             use_container_width=True
         )
-    
     with col2:
         csv_data, mime, ext = file_handler.get_download_button_data(paralimpiadas_df, 'csv')
         st.download_button(
@@ -208,40 +166,28 @@ def render_instructions():
     with col1:
         st.markdown("""
         ### 1️⃣ Preparação
-        - Certifique-se de que sua planilha tenha múltiplas abas
-        - Cada aba representa uma escola diferente
-        - A aba "DIVISÃO" será automaticamente ignorada
+        - Planilha com múltiplas abas
+        - Cada aba = uma escola
+        - Aba "DIVISÃO" será ignorada
         
-        ### 2️⃣ Estrutura Esperada
+        ### 2️⃣ Estrutura
         - **Linha 1:** Nome da escola
-        - **Linha 2:** Cabeçalhos das colunas
-        - **Linha 3+:** Dados dos estudantes
-        
-        ### 3️⃣ Colunas Necessárias
-        - `Ano` - Ano escolar do estudante
-        - `Deficiência/Transtorno` - Status do estudante
+        - **Linha 2:** Cabeçalhos
+        - **Linha 3+:** Dados dos alunos
         """)
     
     with col2:
         st.markdown("""
-        ### 4️⃣ Processamento
-        O sistema irá:
-        - ✅ Ler todas as abas (exceto "DIVISÃO")
-        - ✅ Identificar automaticamente as colunas
-        - ✅ Separar em Olimpíadas e Paralimpíadas
-        - ✅ Gerar dois relatórios diferentes
-        
-        ### 5️⃣ Formatos de Saída
-        **🥇 Olimpíadas:** Formato pivotado
-        - Anos regulares primeiro, EJA/EJAI no final
-        
-        **🥈 Paralimpíadas:** Formato normalizado
-        - Ano sem a palavra "ano" (ex: "1°", "2°")
+        ### 3️⃣ Processamento
+        - ✅ Lê todas as abas
+        - ✅ Identifica colunas automaticamente
+        - ✅ Separa Olimpíadas/Paralimpíadas
+        - ✅ Gera dois relatórios
         """)
     
     st.markdown("---")
     
-    # Exemplos visuais
+    # Exemplos
     st.markdown("### 📊 Exemplos de Saída")
     
     col1, col2 = st.columns(2)
@@ -252,8 +198,7 @@ def render_instructions():
             'Escola': ['ESC. MUNICIPAL PEIXE-BOI', 'ESC. ESTADUAL EXEMPLO'],
             '1° ano': [5, 3],
             '2° ano': [3, 2],
-            '5° ano': [10, 7],
-            'EJA': [2, 4]
+            '5° ano': [10, 7]
         })
         st.dataframe(exemplo_olimpiadas, use_container_width=True, hide_index=True)
     

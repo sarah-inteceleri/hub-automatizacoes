@@ -1,0 +1,28 @@
+[runner]
+magicEnabled = false
+
+[client]
+showSidebarNavigation = false
+```
+
+Isso vai **desabilitar as abas automáticas** do Streamlit.
+
+---
+
+### **3. Verificar estrutura de pastas**
+
+Certifique-se de que a estrutura está assim:
+```
+projeto/
+├── .streamlit/
+│   └── config.toml          ← IMPORTANTE!
+├── app.py
+├── pages/
+│   ├── __init__.py
+│   ├── etiquetas.py
+│   └── unir_abas.py
+├── modules/
+│   └── ...
+├── utils/
+│   └── ...
+└── requirements.txt
